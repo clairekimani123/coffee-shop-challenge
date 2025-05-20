@@ -1,29 +1,19 @@
 class Order:
-    all = []  # Store all orders
+    all = []  # Ensure this is a list
 
     def __init__(self, customer, coffee, price):
-        if not isinstance(customer, Customer):
-            raise TypeError("Customer must be a Customer instance")
-        if not isinstance(coffee, Coffee):
-            raise TypeError("Coffee must be a Coffee instance")
+        if not (hasattr(customer, "__class__") and customer.__class__.__name__ == "Customer"):
+            raise TypeError("customer must be a Customer instance.")
+        if not (hasattr(coffee, "__class__") and coffee.__class__.__name__ == "Coffee"):
+            raise TypeError("coffee must be a Coffee instance.")
+        if not isinstance(price, (int, float)):
+            raise TypeError("Price must be a number.")
+        if not (1.0 <= float(price) <= 10.0):
+            raise ValueError("Price must be between 1.0 and 10.0.")
         self._customer = customer
         self._coffee = coffee
-        self.price = price  # Use setter to enforce rules
+        self._price = float(price)
         Order.all.append(self)
-
-    @property
-    def price(self):
-        return self._price
-
-    @price.setter
-    def price(self, value):
-        if hasattr(self, '_price') and self._price is not None:
-            raise AttributeError("Price cannot be changed")
-        if not isinstance(value, float):
-            raise TypeError("Price must be a float")
-        if not (1.0 <= value <= 10.0):
-            raise ValueError("Price must be between 1.0 and 10.0")
-        self._price = value
 
     @property
     def customer(self):
@@ -32,3 +22,11 @@ class Order:
     @property
     def coffee(self):
         return self._coffee
+
+    @property
+    def price(self):
+        return self._price
+
+    @classmethod
+    def all(cls):
+        return cls.all

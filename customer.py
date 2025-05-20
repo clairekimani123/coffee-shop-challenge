@@ -1,6 +1,6 @@
-class Customer: 
+class Customer:
     def __init__(self, name):
-        self.name = name  # Use the setter to enforce rules
+        self.name = name 
 
     @property
     def name(self):
@@ -9,18 +9,45 @@ class Customer:
     @name.setter
     def name(self, value):
         if not isinstance(value, str):
-            raise TypeError("Name must be a string")
+            raise TypeError("Name must be a string.")
         if not (1 <= len(value) <= 15):
-            raise ValueError("Name must be between 1 and 15 characters")
+            raise ValueError("Name must be 1–15 characters long.")
         self._name = value
 
     def orders(self):
+        from order import Order
         return [order for order in Order.all if order.customer == self]
 
     def coffees(self):
-        # Get unique coffees from this customer's orders
-        coffee_list = [order.coffee for order in self.orders()]
-        return list(set(coffee_list))
+        return list({order.coffee for order in self.orders()})
 
     def create_order(self, coffee, price):
+        from order import Order
         return Order(self, coffee, price)
+
+    @classmethod
+    def most_aficionado(cls, coffee):
+        from order import Order
+        orders = [order for order in Order.all if order.coffee == coffee]
+        if not orders:
+            return None
+        spending = {}
+        max_single_order = {} 
+        for order in orders:
+            customer = order.customer
+            spending[customer] = spending.get(customer, 0) + order.price
+            max_single_order[customer] = max(max_single_order.get(customer, 0), order.price)
+        
+       
+        max_spending = max(spending.values())
+      
+        top_customers = [c for c, s in spending.items() if s == max_spending]
+        
+        if len(top_customers) > 1:
+            return max(top_customers, key=lambda c: (max_single_order[c], c.name))
+        
+        return top_customers[0]
+
+if __name__ == "__main__":
+    customer1 = Customer("Margeret")
+    print(customer1.name)

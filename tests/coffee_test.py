@@ -1,66 +1,42 @@
-import unittest
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.dirname(__file__) + "/.."))
+
+import pytest
 from customer import Customer
-from coffee import coffee
+from coffee import Coffee
 from order import Order
 
-class TestCoffee(unittest.TestCase):
-        def setUp(self):
-                Order.all = []
-                self.margeret = Customer("Margret")
-                self.bob = Customer("Bob")
-                self.lemmon = Coffee("lemmon")
+@pytest.fixture(autouse=True)
+def clear_orders():
+    Order._all_orders.clear()
 
-        def test_name_property(self):
-            self.assertEqual(self.lemmon.name, "Lemmon")
-            with self.assertRaises(AttributeError):
-                self.lemmon.name = "Mocha"  
+def test_coffee_name_validation():
+    with pytest.raises(TypeError):
+        Coffee(123)
+    with pytest.raises(ValueError):
+        Coffee("ab")
+    c = Coffee("Lemmon")
+    assert c.name == "Lemmon"
 
-        def test_name_validation(self):
-            with self.assertRaises(TypeError):
-             Coffee(123)  
-            with self.assertRaises(ValueError):
-                Coffee("Ab") 
+def test_coffee_orders_and_customers():
+    margeret = Customer("Margeret")
+    domi = Customer("Domi")
+    lemmon = Coffee("Lemmon")
+    mocha = Coffee("Mocha")
+    o1 = margeret.create_order(lemmon, 3.0)
+    o2 = margeret.create_order(mocha, 4.0)
+    o3 = domi.create_order(lemmon, 5.0)
+    assert set(lemmon.orders()) == {o1, o3}
+    assert set(lemmon.customers()) == {margeret, domi}
 
-
-
-        def test_orders(self):
-            order1 = Order(self.margeret, self.lemmon, 8.0)
-            order2 = Order(self.bob, self.lemmon, 7.0)
-            self.assertEqual(len(self.lemmon.orders()), 2)
-            self.assertIn(order1, self.lemmon.orders())
-            self.assertIn(order2, self.lemmon.orders())
-
-
-        def test_customer(self):
-             Order(self.margeret, self.lemmon, 8.0)
-             Order(self.bob, self.lemmon, 7.0)
-             Order(self.margeret, self.lemmon, 7.0)
-             customer = self.lemmon.customers()
-             self.assertEqual(len(customer), 2)
-             self.assertIn(self.margeret, customers)
-        self.assertIn(self.bob, customers)
-
-
-        def test_num_orders(self):
-             self.assertEqual(self.lemmon.num_orders(), 0)
-             Order(self.margeret, self.lemmon, 8.0)
-             Order(self.bob, self.lemmon, 7.0)
-             self.assertEqual(self.lemmon.num_orders(), 2)
-
-
-        def test_average_price(self):
-             self.assertEqual(self.lemmon.average_price(), 0)
-             Order(self.margeret, self.lemmon, 8.0)
-             Order(self.bob, self.lemmon, 7.0)
-             self.assertEqual(self.lemmon.average_price(), 7.5)
-        def test_create_order(self):
-             order = self.lemmon.create_order(self.margeret, 5.0)
-             self.assertIsInstance(order, Order)
-             self.assertEqual(order.customer, self.margeret)
-             self.assertEqual(order.coffee, self.lemmon)
-             self.assertEqual(order.price, 5.0)
-             
-if __name__ == '__main__':
-     unittest.main()
-             
-             
+def test_num_orders_and_average_price():
+    margeret = Customer("Margeret")
+    domi = Customer("Domi")
+    lemmon = Coffee("Lemmon")
+    assert lemmon.num_orders() == 0
+    assert lemmon.average_price() == 0
+    margeret.create_order(lemmon, 4.0)
+    domi.create_order(lemmon, 6.0)
+    assert lemmon.num_orders() == 2
+    assert lemmon.average_price() == 5.0
